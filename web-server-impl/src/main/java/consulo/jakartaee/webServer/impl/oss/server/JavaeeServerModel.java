@@ -41,171 +41,142 @@ import consulo.util.xml.serializer.DefaultJDOMExternalizer;
 import consulo.util.xml.serializer.InvalidDataException;
 import consulo.util.xml.serializer.WriteExternalException;
 import consulo.virtualFileSystem.VirtualFile;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import org.jdom.Element;
 import org.jetbrains.annotations.NonNls;
 
-import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 import java.io.File;
 import java.util.*;
 
-public abstract class JavaeeServerModel implements ServerModel, PredefinedLogFilesProvider
-{
-	protected static class LogFileFactory
-	{
-		private boolean myEnabled;
+public abstract class JavaeeServerModel implements ServerModel, PredefinedLogFilesProvider {
+    protected static class LogFileFactory {
+        private boolean myEnabled;
 
-		public LogFileFactory(boolean enabled)
-		{
-			myEnabled = enabled;
-		}
+        public LogFileFactory(boolean enabled) {
+            myEnabled = enabled;
+        }
 
-		protected String getId()
-		{
-			return getClass().getSimpleName();
-		}
+        protected String getId() {
+            return getClass().getSimpleName();
+        }
 
-		protected String getName()
-		{
-			return getId();
-		}
+        protected String getName() {
+            return getId();
+        }
 
-		protected LogFileOptions createOptions(PredefinedLogFile file)
-		{
-			return null;
-		}
+        protected LogFileOptions createOptions(PredefinedLogFile file) {
+            return null;
+        }
 
-		protected String getPath()
-		{
-			return null;
-		}
-	}
+        protected String getPath() {
+            return null;
+        }
+    }
 
-	protected static class DefaultLogFileFactory extends LogFileFactory
-	{
-		public DefaultLogFileFactory()
-		{
-			super(true);
-		}
-	}
+    protected static class DefaultLogFileFactory extends LogFileFactory {
+        public DefaultLogFileFactory() {
+            super(true);
+        }
+    }
 
-	public String USERNAME = getDefaultUsername();
+    public String USERNAME = getDefaultUsername();
 
-	public String PASSWORD = getDefaultPassword();
+    public String PASSWORD = getDefaultPassword();
 
-	private CommonModel config;
+    private CommonModel config;
 
-	public PositionManager createPositionManager(DebugProcess process, JavaEEModuleExtension[] scopeFacetsWithIncluded)
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    public PositionManager createPositionManager(DebugProcess process, JavaEEModuleExtension[] scopeFacetsWithIncluded) {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	protected String getJdkRequiredMessage()
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    protected String getJdkRequiredMessage() {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public int getPingPort()
-	{
-		//TODO [VISTALL] STUB
-		return -1;
-	}
+    public int getPingPort() {
+        //TODO [VISTALL] STUB
+        return -1;
+    }
 
-	protected JavaeeAdmin createServerAdmin(JavaeeServerInstance serverInstance) throws Exception
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    protected JavaeeAdmin createServerAdmin(JavaeeServerInstance serverInstance) throws Exception {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public String getVmArgument(String key)
-	{
-		return null;
-	}
+    public String getVmArgument(String key) {
+        return null;
+    }
 
-	@Nonnull
-	protected List<LogFileFactory> getLogFileFactories()
-	{
-		return Collections.emptyList();
-	}
+    @Nonnull
+    protected List<LogFileFactory> getLogFileFactories() {
+        return Collections.emptyList();
+    }
 
-	protected String getLogFileId()
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    protected String getLogFileId() {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public boolean isDetectableLocalPort()
-	{
-		//TODO [VISTALL] STUB
-		return true;
-	}
+    public boolean isDetectableLocalPort() {
+        //TODO [VISTALL] STUB
+        return true;
+    }
 
-	public boolean isDetectableServerPort()
-	{
-		//TODO [VISTALL] STUB
-		return true;
-	}
+    public boolean isDetectableServerPort() {
+        //TODO [VISTALL] STUB
+        return true;
+    }
 
-	public void onNewConfigurationCreated()
-	{
-	}
+    public void onNewConfigurationCreated() {
+    }
 
-	public void onConfigurationCopied()
-	{
-	}
+    public void onConfigurationCopied() {
+    }
 
-	public List<Pair<String, String>> getExternalizationMacros()
-	{
-		//TODO [VISTALL] STUB
-		return Collections.emptyList();
-	}
+    public List<Pair<String, String>> getExternalizationMacros() {
+        //TODO [VISTALL] STUB
+        return Collections.emptyList();
+    }
 
-	protected void checkJdkAtLeast7()
-	{
-		//TODO [VISTALL] STUB
-	}
+    protected void checkJdkAtLeast7() {
+        //TODO [VISTALL] STUB
+    }
 
-	protected void checkHasJdk()
-	{
-		//TODO [VISTALL] STUB
-	}
+    protected void checkHasJdk() {
+        //TODO [VISTALL] STUB
+    }
 
-	protected String getJdkTooOldMessage(String description)
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    protected String getJdkTooOldMessage(String description) {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public Sdk getJre()
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    public Sdk getJre() {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public String getJrePath()
-	{
-		//TODO [VISTALL] STUB
-		return null;
-	}
+    public String getJrePath() {
+        //TODO [VISTALL] STUB
+        return null;
+    }
 
-	public boolean undeployBeforeDeploy(DeploymentModel deploymentModel)
-	{
-		//TODO [VISTALL] STUB
-		return false;
-	}
+    public boolean undeployBeforeDeploy(DeploymentModel deploymentModel) {
+        //TODO [VISTALL] STUB
+        return false;
+    }
 
-	@Override
-	public void setCommonModel(CommonModel config)
-	{
-		this.config = config;
-	}
+    @Override
+    public void setCommonModel(CommonModel config) {
+        this.config = config;
+    }
 
-	@Override
-	public J2EEServerInstance createServerInstance() throws ExecutionException
-	{
-		/*try
+    @Override
+    public J2EEServerInstance createServerInstance() throws ExecutionException {
+        /*try
 		{
 			((JavaeeIntegration) config.getIntegration()).checkValidServerHome(getHome(), getVersion());
 			ClassLoader loader = new JavaeeClassLoader(getLibraries(), getExcludes(), getClass().getClassLoader());
@@ -222,167 +193,140 @@ public abstract class JavaeeServerModel implements ServerModel, PredefinedLogFil
 		{
 			throw new ExecutionException(e.getMessage(), e);
 		} */
-		throw new UnsupportedOperationException();
-	}
+        throw new UnsupportedOperationException();
+    }
 
-	@Override
-	public DeploymentProvider getDeploymentProvider()
-	{
-		return new JavaeeDeploymentProvider(false);
-	}
+    @Override
+    public DeploymentProvider getDeploymentProvider() {
+        return new JavaeeDeploymentProvider(false);
+    }
 
-	@Override
-	public int getDefaultPort()
-	{
-		return 8080;
-	}
+    @Override
+    public int getDefaultPort() {
+        return 8080;
+    }
 
-	@Override
-	public int getLocalPort()
-	{
-		return getDefaultPort();
-	}
+    @Override
+    public int getLocalPort() {
+        return getDefaultPort();
+    }
 
-	@Override
-	public String getDefaultUrlForBrowser()
-	{
-		return getDefaultUrlForBrowser(true);
-	}
+    @Override
+    public String getDefaultUrlForBrowser() {
+        return getDefaultUrlForBrowser(true);
+    }
 
-	@Override
-	public OutputProcessor createOutputProcessor(ProcessHandler handler, J2EEServerInstance instance)
-	{
-		return new DefaultOutputProcessor(handler);
-	}
+    @Override
+    public OutputProcessor createOutputProcessor(ProcessHandler handler, J2EEServerInstance instance) {
+        return new DefaultOutputProcessor(handler);
+    }
 
-	@Override
-	@Nullable
-	public List<Pair<String, Integer>> getAddressesToCheck()
-	{
-		return config.isLocal() ? Collections.singletonList(new Pair<>(getServerHost(), getServerPort())) : null;
-	}
+    @Override
+    @Nullable
+    public List<Pair<String, Integer>> getAddressesToCheck() {
+        return config.isLocal() ? Collections.singletonList(new Pair<>(getServerHost(), getServerPort())) : null;
+    }
 
-	@Override
-	public void checkConfiguration() throws RuntimeConfigurationException
-	{
-		if(StringUtil.isNotEmpty(USERNAME) && StringUtil.isEmpty(PASSWORD))
-		{
-			throw new RuntimeConfigurationError(JavaeeBundle.message("ServerModel.password"));
-		}
-	}
+    @Override
+    public void checkConfiguration() throws RuntimeConfigurationException {
+        if (StringUtil.isNotEmpty(USERNAME) && StringUtil.isEmpty(PASSWORD)) {
+            throw new RuntimeConfigurationError(JavaeeBundle.message("ServerModel.password"));
+        }
+    }
 
-	@Override
-	public void readExternal(Element element) throws InvalidDataException
-	{
-		DefaultJDOMExternalizer.readExternal(this, element);
-	}
+    @Override
+    public void readExternal(Element element) throws InvalidDataException {
+        DefaultJDOMExternalizer.readExternal(this, element);
+    }
 
-	@Override
-	public void writeExternal(Element element) throws WriteExternalException
-	{
-		DefaultJDOMExternalizer.writeExternal(this, element);
-	}
+    @Override
+    public void writeExternal(Element element) throws WriteExternalException {
+        DefaultJDOMExternalizer.writeExternal(this, element);
+    }
 
-	@Override
-	public Object clone() throws CloneNotSupportedException
-	{
-		return super.clone();
-	}
+    @Override
+    public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 
-	@Nullable
-	public String getHome()
-	{
-		Sdk server = config.getServerBundle();
-		return server != null ? server.getHomePath() : null;
-	}
+    @Nullable
+    public String getHome() {
+        Sdk server = config.getServerBundle();
+        return server != null ? server.getHomePath() : null;
+    }
 
-	@Nullable
-	public String getVersion()
-	{
-		Sdk server = config.getServerBundle();
-		return server != null ? server.getVersionString() : null;
-	}
+    @Nullable
+    public String getVersion() {
+        Sdk server = config.getServerBundle();
+        return server != null ? server.getVersionString() : null;
+    }
 
-	public String getVmArguments()
-	{
-		return (config instanceof CommonStrategy) ? ((CommonStrategy) config).getSettingsBean().COMMON_VM_ARGUMENTS : "";
-	}
+    public String getVmArguments() {
+        return (config instanceof CommonStrategy) ? ((CommonStrategy) config).getSettingsBean().COMMON_VM_ARGUMENTS : "";
+    }
 
-	protected boolean isDeploymentSourceSupported(DeploymentSource source)
-	{
-		return true;
-	}
+    protected boolean isDeploymentSourceSupported(DeploymentSource source) {
+        return true;
+    }
 
-	@NonNls
-	protected abstract String getDefaultUsername();
+    @NonNls
+    protected abstract String getDefaultUsername();
 
-	@NonNls
-	protected abstract String getDefaultPassword();
+    @NonNls
+    protected abstract String getDefaultPassword();
 
-	protected abstract int getServerPort();
+    protected abstract int getServerPort();
 
-	protected String getServerHost()
-	{
-		return config.getHost();
-	}
+    protected String getServerHost() {
+        return config.getHost();
+    }
 
-	public CommonModel getCommonModel()
-	{
-		return config;
-	}
+    public CommonModel getCommonModel() {
+        return config;
+    }
 
-	protected List<File> getLibraries() throws ExecutionException
-	{
-		List<File> libraries = new ArrayList<>();
-		libraries.add(new File(ClassPathUtil.getJarPathForClass(getClass())));
+    protected List<File> getLibraries() throws ExecutionException {
+        List<File> libraries = new ArrayList<>();
+        libraries.add(new File(ClassPathUtil.getJarPathForClass(getClass())));
 
-		Sdk serverBundle = config.getServerBundle();
-		if(serverBundle != null)
-		{
-			for(VirtualFile file : serverBundle.getRootProvider().getFiles(BinariesOrderRootType.getInstance()))
-			{
-				libraries.add(new File(file.getPresentableUrl()));
-			}
-		}
-		return libraries;
-	}
+        Sdk serverBundle = config.getServerBundle();
+        if (serverBundle != null) {
+            for (VirtualFile file : serverBundle.getRootProvider().getFiles(BinariesOrderRootType.ID)) {
+                libraries.add(new File(file.getPresentableUrl()));
+            }
+        }
+        return libraries;
+    }
 
-	protected File getPathUnderHome(String name)
-	{
-		return null;
-	}
+    protected File getPathUnderHome(String name) {
+        return null;
+    }
 
-	protected Set<Class<?>> getExcludes()
-	{
-		Set<Class<?>> excludes = new HashSet<>();
-		excludes.add(JavaeeServer.class);
-		excludes.add(JavaeeDescriptor.class);
-		return excludes;
-	}
+    protected Set<Class<?>> getExcludes() {
+        Set<Class<?>> excludes = new HashSet<>();
+        excludes.add(JavaeeServer.class);
+        excludes.add(JavaeeDescriptor.class);
+        return excludes;
+    }
 
-	String getDefaultUrlForBrowser(boolean addContextPath)
-	{
-		@NonNls String url = "http://" + config.getHost() + ':' + config.getPort();
-		if(addContextPath)
-		{
-			String path = getContextPathFromAppFacets();
-			if(StringUtil.isEmpty(path))
-			{
-				path = getContextPathFromWebFacets();
-			}
-			if(StringUtil.isNotEmpty(path))
-			{
-				url = ArtifactUtil.concatPaths(url, path);
-			}
-			url = ArtifactUtil.concatPaths(url, "/");
-		}
-		return url;
-	}
+    String getDefaultUrlForBrowser(boolean addContextPath) {
+        @NonNls String url = "http://" + config.getHost() + ':' + config.getPort();
+        if (addContextPath) {
+            String path = getContextPathFromAppFacets();
+            if (StringUtil.isEmpty(path)) {
+                path = getContextPathFromWebFacets();
+            }
+            if (StringUtil.isNotEmpty(path)) {
+                url = ArtifactUtil.concatPaths(url, path);
+            }
+            url = ArtifactUtil.concatPaths(url, "/");
+        }
+        return url;
+    }
 
-	@Nullable
-	@NonNls
-	private String getContextPathFromAppFacets()
-	{
+    @Nullable
+    @NonNls
+    private String getContextPathFromAppFacets() {
 		/*List<JavaEEApplicationModuleExtension> facets = new ArrayList<JavaEEApplicationModuleExtension>();
 		for(DeploymentModel deployment : config.getDeploymentModels())
 		{
@@ -405,13 +349,12 @@ public abstract class JavaeeServerModel implements ServerModel, PredefinedLogFil
 				return path;
 			}
 		}*/
-		return null;
-	}
+        return null;
+    }
 
-	@Nullable
-	@NonNls
-	private String getContextPathFromWebFacets()
-	{
+    @Nullable
+    @NonNls
+    private String getContextPathFromWebFacets() {
 	/*	for(DeploymentModel deployment : config.getDeploymentModels())
 		{
 			Artifact artifact = deployment.getArtifact();
@@ -448,67 +391,56 @@ public abstract class JavaeeServerModel implements ServerModel, PredefinedLogFil
 				}
 			}
 		} */
-		return null;
-	}
+        return null;
+    }
 
-	@Nullable
-	@NonNls
-	protected String getContextPathFromAppFacet(JavaEEApplicationModuleExtension facet)
-	{
-		JavaeeApplication application = facet.getRoot();
-		if(application != null)
-		{
-			for(JavaeeModule module : application.getModules())
-			{
-				if(module.getWeb().getXmlTag() != null)
-				{
-					return module.getWeb().getContextRoot().getValue();
-				}
-			}
-		}
-		return null;
-	}
+    @Nullable
+    @NonNls
+    protected String getContextPathFromAppFacet(JavaEEApplicationModuleExtension facet) {
+        JavaeeApplication application = facet.getRoot();
+        if (application != null) {
+            for (JavaeeModule module : application.getModules()) {
+                if (module.getWeb().getXmlTag() != null) {
+                    return module.getWeb().getContextRoot().getValue();
+                }
+            }
+        }
+        return null;
+    }
 
-	@Nullable
-	@NonNls
-	protected String getContextPathFromWebFacet(JavaWebModuleExtension facet, DeploymentModel deployment)
-	{
-		DeploymentManager manager = DeploymentManager.getInstance(config.getProject());
-		File source = manager.getDeploymentSource(deployment);
-		return (source != null) ? StringUtil.trimEnd(source.getName(), ".war") : null;
-	}
+    @Nullable
+    @NonNls
+    protected String getContextPathFromWebFacet(JavaWebModuleExtension facet, DeploymentModel deployment) {
+        DeploymentManager manager = DeploymentManager.getInstance(config.getProject());
+        File source = manager.getDeploymentSource(deployment);
+        return (source != null) ? StringUtil.trimEnd(source.getName(), ".war") : null;
+    }
 
-	@Override
-	@Nonnull
-	public PredefinedLogFile[] getPredefinedLogFiles()
-	{
-		return new PredefinedLogFile[]{new PredefinedLogFile(getLogFileId(), true)};
-	}
+    @Override
+    @Nonnull
+    public PredefinedLogFile[] getPredefinedLogFiles() {
+        return new PredefinedLogFile[]{new PredefinedLogFile(getLogFileId(), true)};
+    }
 
-	@Override
-	@Nullable
-	public LogFileOptions getOptionsForPredefinedLogFile(PredefinedLogFile file)
-	{
-		if(getLogFileId().equals(file.getId()))
-		{
-			String path = getLogFilePath(getHome());
-			if(path != null)
-			{
-				String name = JavaeeBundle.message("ServerModel.logfile", getLogFileId());
-				return new LogFileOptions(name, path, file.isEnabled(), true, false);
-			}
-		}
-		return null;
-	}
+    @Override
+    @Nullable
+    public LogFileOptions getOptionsForPredefinedLogFile(PredefinedLogFile file) {
+        if (getLogFileId().equals(file.getId())) {
+            String path = getLogFilePath(getHome());
+            if (path != null) {
+                String name = JavaeeBundle.message("ServerModel.logfile", getLogFileId());
+                return new LogFileOptions(name, path, file.isEnabled(), true, false);
+            }
+        }
+        return null;
+    }
 
-	@Nullable
-	protected String getLogFilePath(String home)
-	{
-		return null;
-	}
+    @Nullable
+    protected String getLogFilePath(String home) {
+        return null;
+    }
 
-	protected boolean isTruncateLogFile()
-	{
-		return false;
-	}
+    protected boolean isTruncateLogFile() {
+        return false;
+    }
 }
