@@ -19,13 +19,12 @@ package consulo.jsp.impl.language.psi;
 import consulo.jsp.language.JspLanguage;
 import consulo.jsp.language.ast.JspTokenType;
 import consulo.language.ast.IElementType;
-import consulo.language.ast.TokenType;
+import consulo.language.ast.StandardTokenTypes;
 
 /**
  * @author VISTALL
  * @since 08.11.13.
  */
-public interface JspTokens extends JspTokenType, TokenType
-{
-	IElementType HTML_FRAGMENT = new IElementType("HTML_FRAGMENT", JspLanguage.INSTANCE);
+public interface JspTokens extends JspTokenType, StandardTokenTypes {
+    IElementType HTML_FRAGMENT = new IElementType("HTML_FRAGMENT", JspLanguage.INSTANCE);
 }
