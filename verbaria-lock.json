@@ -3,32 +3,16 @@
   "server" : "https://i.verbaria.org/",
   "project" : "consulo-jakarta-web",
   "projectVersion" : "master",
-  "generatedAt" : "2026-06-23T19:24:34.508753025Z",
+  "generatedAt" : "2026-06-23T19:26:03.782594466Z",
   "documents" : {
     "consulo.jakarta.JakartaLocalize" : {
       "source" : {
         "revision" : 1
-      },
-      "translations" : {
-        "en-US" : {
-          "sig" : "1e1f1a94584504f529926b502bd8f8b7",
-          "state" : "Approved",
-          "total" : 788,
-          "translators" : [ "Valery Semenchuk <vistall.valeriy@gmail.com>" ]
-        }
       }
     },
     "consulo.jakartaee.webServer.impl.JakartaWebServerLocalize" : {
       "source" : {
         "revision" : 1
-      },
-      "translations" : {
-        "en-US" : {
-          "sig" : "d4e6c44a69cb96ae75b427109d028d87",
-          "state" : "Approved",
-          "total" : 36,
-          "translators" : [ "Valery Semenchuk <vistall.valeriy@gmail.com>" ]
-        }
       }
     }
   }
