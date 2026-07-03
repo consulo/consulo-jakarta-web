@@ -5,10 +5,11 @@
 package consulo.jakartaee.webServer.impl.oss.util;
 
 import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.ex.action.AnActionWithSyncUpdate;
 
 import javax.swing.*;
 
-public class TableSourceAction extends OpenSourceAction {
+public class TableSourceAction extends OpenSourceAction implements AnActionWithSyncUpdate {
 
     private final JTable table;
 

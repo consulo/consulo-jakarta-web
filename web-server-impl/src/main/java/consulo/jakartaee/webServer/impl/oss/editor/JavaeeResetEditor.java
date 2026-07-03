@@ -24,7 +24,7 @@ public abstract class JavaeeResetEditor<T extends DomElement> extends JavaeeBase
     protected JavaeeResetEditor(T element) {
         this.element = element;
         main.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        AnAction revert = new AnAction(JavaeeBundle.message("GenericAction.reset"), null, AllIcons.Actions.Cancel) {
+        AnAction revert = new LegacyAnAction(JavaeeBundle.message("GenericAction.reset"), null, AllIcons.Actions.Cancel) {
             @Override
             public void actionPerformed(AnActionEvent event) {
                 new WriteCommandAction<Object>(getElement().getManager().getProject()) {

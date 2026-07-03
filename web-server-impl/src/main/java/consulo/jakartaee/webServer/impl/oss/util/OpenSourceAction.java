@@ -4,9 +4,9 @@
 
 package consulo.jakartaee.webServer.impl.oss.util;
 
-import consulo.jakartaee.webServer.impl.oss.JavaeeBundle;
 import consulo.application.AllIcons;
 import consulo.dataContext.DataManager;
+import consulo.jakartaee.webServer.impl.oss.JavaeeBundle;
 import consulo.ui.ex.OpenSourceUtil;
 import consulo.ui.ex.action.AnAction;
 import consulo.ui.ex.action.AnActionEvent;
@@ -16,8 +16,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-public class OpenSourceAction extends AnAction
-{
+public class OpenSourceAction extends AnAction {
 
     private final Component component;
 
