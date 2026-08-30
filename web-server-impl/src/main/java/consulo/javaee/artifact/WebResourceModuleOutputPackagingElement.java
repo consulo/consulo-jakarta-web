@@ -26,8 +26,6 @@ import consulo.module.content.ModuleRootManager;
 import consulo.project.Project;
 import consulo.virtualFileSystem.VirtualFile;
 
-import jakarta.annotation.Nonnull;
-
 /**
  * @author VISTALL
  * @since 2013-11-07
@@ -52,10 +50,10 @@ public class WebResourceModuleOutputPackagingElement extends ModuleOutputPackagi
 
     @Override
     public void computeIncrementalCompilerInstructions(
-        @Nonnull IncrementalCompilerInstructionCreator creator,
-        @Nonnull PackagingElementResolvingContext resolvingContext,
-        @Nonnull ArtifactIncrementalCompilerContext compilerContext,
-        @Nonnull ArtifactType artifactType
+        IncrementalCompilerInstructionCreator creator,
+        PackagingElementResolvingContext resolvingContext,
+        ArtifactIncrementalCompilerContext compilerContext,
+        ArtifactType artifactType
     ) {
         Module module = findModule(resolvingContext);
         if (module != null) {
@@ -63,7 +61,7 @@ public class WebResourceModuleOutputPackagingElement extends ModuleOutputPackagi
                 ModuleRootManager.getInstance(module).getContentFolderFiles(LanguageContentFolderScopes.of(myContentFolderType));
 
             for (VirtualFile virtualFile : virtualFiles) {
-                creator.addDirectoryCopyInstructions(virtualFile, null);
+                creator.addDirectoryCopyInstructions(virtualFile.toNioPath(), null);
             }
         }
     }
