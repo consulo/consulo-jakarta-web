@@ -268,6 +268,8 @@ border.relationship.editor.role.1:
     text: Role 1
 border.relationship.editor.role.2:
     text: Role 2
+border.run.configuration.editor.deploy.at.server.startup:
+    text: Deploy at server startup
 border.run.configuration.editor.environment.variables:
     text: Environment Variables
 border.run.configuration.editor.remote.connection.settings.group:
@@ -1082,6 +1084,10 @@ label.rename.servlet.name:
     text: 'Servlet name:'
 label.run.configuration.editor.add.vm.parameters:
     text: <html><body>To {0} remote server JVM, it should be started with the following<br/>command line arguments (you may copy and paste them):</body></html>
+label.run.configuration.editor.deployment.source.artifact:
+    text: Artifact...
+label.run.configuration.editor.environment.variables:
+    text: 'Environment variables:'
 label.run.configuration.editor.host:
     text: '&Host:'
 label.run.configuration.editor.port:
@@ -1527,10 +1533,16 @@ title.module.service.references:
     text: Web Service References
 title.open.file.in.browser.text:
     text: Open File in Browser
+title.run.configuration.editor.choose.artifact:
+    text: Choose Artifact
 title.run.configuration.editor.deployment:
     text: Deployment
+title.run.configuration.editor.select.deployment.source:
+    text: Select Source
 title.run.configuration.editor.server:
     text: Server
+title.run.configuration.editor.server.settings:
+    text: '{0} Server Settings'
 title.servlet.properties.general:
     text: General
 title.servlet.properties.servlet.class:

@@ -347,7 +347,7 @@ public class JavaeeSectionView implements CommittablePanel {
         @Nullable
         @Override
         public String getValue(int column) {
-            return column == 0 || expanded.contains(section) ? getColumnInfo(section, column).getName() : null;
+            return column == 0 || expanded.contains(section) ? getColumnInfo(section, column).getName().get() : null;
         }
 
         @Override

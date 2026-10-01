@@ -4,83 +4,53 @@ import consulo.application.Application;
 import consulo.configurable.ConfigurationException;
 import consulo.execution.configuration.ui.SettingsEditor;
 import consulo.execution.executor.Executor;
+import consulo.execution.ui.awt.EnvironmentVariablesTextFieldWithBrowseButton;
 import consulo.jakarta.localize.JakartaLocalize;
 import consulo.javaee.run.configuration.JavaEEConfigurationImpl;
-import consulo.ui.ex.awt.*;
-import consulo.ui.ex.awt.table.ListTableModel;
-import consulo.ui.ex.awt.table.TableView;
-import consulo.util.lang.Couple;
-import jakarta.annotation.Nonnull;
-
-import javax.swing.*;
-import java.awt.*;
-import java.util.ArrayList;
+import consulo.ui.CheckBox;
+import consulo.ui.Component;
+import consulo.ui.ListBox;
+import consulo.ui.TextBox;
+import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.layout.DockLayout;
+import consulo.ui.layout.ScrollableLayout;
+import consulo.ui.layout.VerticalLayout;
+import consulo.ui.util.FormBuilder;
 
 /**
  * @author VISTALL
  * @since 2017-07-11
  */
 public class JavaEEStartupConfigurationEditor extends SettingsEditor<JavaEEConfigurationImpl> {
-    @Nonnull
     @Override
-    protected JComponent createEditor() {
-        JPanel panel = new JPanel(new VerticalFlowLayout());
-        JBList<Executor> executorList = new JBList<>(new CollectionListModel<>(Application.get().getExtensionList(Executor.class)));
-        executorList.setCellRenderer(new ColoredListCellRenderer<>() {
-            @Override
-            protected void customizeCellRenderer(
-                @Nonnull JList<? extends Executor> list,
-                Executor value,
-                int index,
-                boolean selected,
-                boolean hasFocus
-            ) {
-                setIcon(value.getIcon());
-                append(value.getActionName().get());
+    @RequiredUIAccess
+    protected Component createUIComponent() {
+        ListBox<Executor> executorList = ListBox.create(Application.get().getExtensionList(Executor.class));
+        executorList.setRender((presentation, item) -> {
+            Executor executor = item.getValue();
+            if (executor != null) {
+                presentation.withIcon(executor.getIcon());
+                presentation.append(executor.getActionName());
             }
         });
-        JScrollPane scrollPane = ScrollPaneFactory.createScrollPane(executorList);
-        scrollPane.setPreferredSize(JBUI.size(-1, 90));
-        panel.add(scrollPane);
 
-        JBTextField startupScript = new JBTextField();
-        JBTextField shutdownScript = new JBTextField();
+        FormBuilder form = FormBuilder.create();
+        form.addLabeled(JakartaLocalize.labelRunConfigurationEditorStartupScript(), createScriptRow());
+        form.addLabeled(JakartaLocalize.labelRunConfigurationEditorShutdownScript(), createScriptRow());
+        form.addLabeled(
+            JakartaLocalize.labelRunConfigurationEditorEnvironmentVariables(),
+            new EnvironmentVariablesTextFieldWithBrowseButton().getComponent()
+        );
+        form.addBottom(CheckBox.create(JakartaLocalize.checkboxRunConfigurationEditorPassEnvironmentVariables()));
 
-        JBCheckBox startScriptDefault = new JBCheckBox(JakartaLocalize.checkboxEditScriptPropertiesUseDefault().get());
-        JBCheckBox shutdownScriptDefault = new JBCheckBox(JakartaLocalize.checkboxEditScriptPropertiesUseDefault().get());
+        return ScrollableLayout.create(VerticalLayout.create().add(executorList).add(form.build()));
+    }
 
-        JPanel scriptPanel = new JPanel(new GridLayout(2, 3));
-        panel.add(scriptPanel);
-        scriptPanel.add(new JBLabel(JakartaLocalize.labelRunConfigurationEditorStartupScript().get()));
-        scriptPanel.add(startupScript);
-        scriptPanel.add(startScriptDefault);
-        scriptPanel.add(new JBLabel(JakartaLocalize.labelRunConfigurationEditorShutdownScript().get()));
-        scriptPanel.add(shutdownScript);
-        scriptPanel.add(shutdownScriptDefault);
-
-        JPanel envPanel = new JPanel(new BorderLayout());
-        envPanel.setBorder(IdeBorderFactory.createTitledBorder(
-            JakartaLocalize.borderRunConfigurationEditorEnvironmentVariables().get(),
-            false
-        ));
-        JBCheckBox passEnvVariables = new JBCheckBox(JakartaLocalize.checkboxRunConfigurationEditorPassEnvironmentVariables().get());
-        envPanel.add(passEnvVariables, BorderLayout.NORTH);
-
-        java.util.List<Couple<String>> env = new ArrayList<>();
-        ColumnInfo[] columnInfos = {
-            new ColumnInfo.StringColumn("Name"),
-            new ColumnInfo.StringColumn("Value")
-        };
-        TableView<Couple<String>> tableView = new TableView<>(new ListTableModel<>(columnInfos, env));
-        ToolbarDecorator decorator = ToolbarDecorator.createDecorator(tableView);
-        decorator.disableUpDownActions();
-
-        JPanel comp = decorator.createPanel();
-        comp.setPreferredSize(JBUI.size(-1, 100));
-        envPanel.add(comp, BorderLayout.CENTER);
-
-        panel.add(envPanel);
-        return ScrollPaneFactory.createScrollPane(panel);
+    @RequiredUIAccess
+    private static Component createScriptRow() {
+        return DockLayout.create()
+            .center(TextBox.create())
+            .right(CheckBox.create(JakartaLocalize.checkboxEditScriptPropertiesUseDefault()));
     }
 
     @Override

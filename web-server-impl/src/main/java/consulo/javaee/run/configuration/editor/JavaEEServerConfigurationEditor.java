@@ -2,26 +2,21 @@ package consulo.javaee.run.configuration.editor;
 
 import consulo.configurable.ConfigurationException;
 import consulo.content.bundle.Sdk;
-import consulo.content.bundle.SdkModel;
 import consulo.disposer.Disposer;
 import consulo.execution.configuration.ui.SettingsEditor;
-import consulo.ide.setting.ShowSettingsUtil;
 import consulo.jakarta.localize.JakartaLocalize;
 import consulo.jakartaee.webServer.impl.run.configuration.ApplicationServerSelectionListener;
+import consulo.jakartaee.webServer.impl.run.configuration.CommonModel;
 import consulo.javaee.bundle.JavaEEServerBundleType;
 import consulo.javaee.run.configuration.JavaEEConfigurationImpl;
-import consulo.localize.LocalizeValue;
-import consulo.module.ui.awt.SdkComboBox;
-import consulo.ui.ex.awt.IdeBorderFactory;
-import consulo.ui.ex.awt.LabeledComponent;
-import consulo.ui.ex.awt.VerticalFlowLayout;
-import consulo.ui.ex.awt.Wrapper;
-import consulo.util.lang.function.Predicates;
-import jakarta.annotation.Nonnull;
-
-import javax.swing.*;
-import java.awt.event.ItemEvent;
-import java.awt.event.ItemListener;
+import consulo.module.ui.BundleBox;
+import consulo.module.ui.BundleBoxBuilder;
+import consulo.ui.Component;
+import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.layout.DockLayout;
+import consulo.ui.layout.VerticalLayout;
+import consulo.ui.util.FormBuilder;
+import jakarta.annotation.Nullable;
 
 /**
  * @author VISTALL
@@ -30,80 +25,128 @@ import java.awt.event.ItemListener;
 public class JavaEEServerConfigurationEditor extends SettingsEditor<JavaEEConfigurationImpl> {
     private final JavaEEServerBundleType myBundleType;
 
-    private final Wrapper mySettingsWrapper = new Wrapper();
-
-    private SdkComboBox myBundleBox;
-
-    private ItemListener myBundleBoxListener;
-    private SettingsEditor myServerEditor;
+    @Nullable
+    private BundleBox myBundleBox;
+    @Nullable
+    private DockLayout myServerSettingsPanel;
+    @Nullable
+    private SettingsEditor<CommonModel> myServerEditor;
+    @Nullable
+    private JavaEEConfigurationImpl myConfiguration;
+    private boolean myResetting;
 
     public JavaEEServerConfigurationEditor(JavaEEServerBundleType bundleType) {
         myBundleType = bundleType;
     }
 
-    @Nonnull
     @Override
-    protected JComponent createEditor() {
-        JPanel verticalLayout = new JPanel(new VerticalFlowLayout(0, 0));
+    @RequiredUIAccess
+    protected Component createUIComponent() {
+        BundleBox bundleBox = BundleBoxBuilder.create(this)
+            .withSdkTypeFilterByType(myBundleType)
+            .withNoneItem()
+            .build();
+        bundleBox.getComponent().addValueListener(event -> serverSelected(event.getValue()));
+        myBundleBox = bundleBox;
 
-        SdkModel model = ShowSettingsUtil.getInstance().getSdksModel();
+        FormBuilder form = FormBuilder.create();
+        form.addLabeled(JakartaLocalize.labelRunConfigurationPropertiesApplicationServer(), bundleBox.getComponent());
 
-        myBundleBox = new SdkComboBox(model, Predicates.equalTo(myBundleType), true);
-        verticalLayout.add(LabeledComponent.left(myBundleBox, JakartaLocalize.labelRunConfigurationPropertiesApplicationServer().get()));
+        DockLayout serverSettingsPanel = DockLayout.create();
+        myServerSettingsPanel = serverSettingsPanel;
 
-        JPanel openBrowserPanel = new JPanel();
-        openBrowserPanel.setBorder(IdeBorderFactory.createTitledBorder(LocalizeValue.localizeTODO("Open browser").get()));
-        verticalLayout.add(openBrowserPanel);
+        SettingsEditor<CommonModel> serverEditor = myServerEditor;
+        if (serverEditor != null) {
+            serverSettingsPanel.center(serverEditor.getUIComponent());
+        }
 
-        verticalLayout.add(mySettingsWrapper);
+        JavaEEConfigurationImpl configuration = myConfiguration;
+        if (configuration != null) {
+            selectServer(bundleBox, configuration);
+        }
 
-        return verticalLayout;
+        return VerticalLayout.create().add(form.build()).add(serverSettingsPanel);
+    }
+
+    @RequiredUIAccess
+    private void serverSelected(@Nullable BundleBox.BundleBoxItem item) {
+        JavaEEConfigurationImpl configuration = myConfiguration;
+        SettingsEditor<CommonModel> serverEditor = myServerEditor;
+        if (myResetting || configuration == null || serverEditor == null) {
+            return;
+        }
+
+        Sdk server = item == null ? null : item.getBundle();
+
+        configuration.APPLICATION_SERVER_NAME = server == null ? null : server.getName();
+
+        if (serverEditor instanceof ApplicationServerSelectionListener applicationServerSelectionListener) {
+            applicationServerSelectionListener.serverSelected(server);
+        }
+
+        serverEditor.resetFrom(configuration);
+
+        fireEditorStateChanged();
+    }
+
+    @RequiredUIAccess
+    private void selectServer(BundleBox bundleBox, JavaEEConfigurationImpl configuration) {
+        myResetting = true;
+        try {
+            bundleBox.setSelectedBundle(configuration.APPLICATION_SERVER_NAME);
+        }
+        finally {
+            myResetting = false;
+        }
     }
 
     @Override
+    @RequiredUIAccess
     @SuppressWarnings("unchecked")
     protected void resetEditorFrom(JavaEEConfigurationImpl configuration) {
-        if (myBundleBoxListener != null) {
-            myBundleBox.removeItemListener(myBundleBoxListener);
-            myBundleBoxListener = null;
-        }
+        myConfiguration = configuration;
 
-        if (myServerEditor != null) {
-            Disposer.dispose(myServerEditor);
-            mySettingsWrapper.setContent(null);
+        SettingsEditor<CommonModel> oldServerEditor = myServerEditor;
+        if (oldServerEditor != null) {
+            Disposer.dispose(oldServerEditor);
             myServerEditor = null;
         }
 
-        myServerEditor = configuration.getServerModel().getEditor();
-        Disposer.register(this, myServerEditor);
+        SettingsEditor<CommonModel> serverEditor = configuration.getServerModel().getEditor();
+        if (serverEditor != null) {
+            Disposer.register(this, serverEditor);
+            myServerEditor = serverEditor;
+        }
 
-        mySettingsWrapper.setContent(myServerEditor.getComponent());
+        DockLayout serverSettingsPanel = myServerSettingsPanel;
+        if (serverSettingsPanel != null) {
+            serverSettingsPanel.removeAll();
+        }
 
-        myBundleBox.setSelectedSdk(configuration.APPLICATION_SERVER_NAME);
-
-        myBundleBox.addItemListener(myBundleBoxListener = e -> {
-            if (e.getStateChange() == ItemEvent.SELECTED) {
-                Sdk selectedSdk = myBundleBox.getSelectedSdk();
-
-                configuration.APPLICATION_SERVER_NAME = selectedSdk == null ? null : selectedSdk.getName();
-
-                if (myServerEditor instanceof ApplicationServerSelectionListener applicationServerSelectionListener) {
-                    applicationServerSelectionListener.serverSelected(selectedSdk);
-                }
-
-                myServerEditor.resetFrom(configuration);
-
-                fireEditorStateChanged();
+        if (serverEditor != null) {
+            Component serverComponent = serverEditor.getUIComponent();
+            if (serverSettingsPanel != null) {
+                serverSettingsPanel.center(serverComponent);
             }
-        });
+            serverEditor.resetFrom(configuration);
+        }
 
-        myServerEditor.resetFrom(configuration);
+        BundleBox bundleBox = myBundleBox;
+        if (bundleBox != null) {
+            selectServer(bundleBox, configuration);
+        }
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     protected void applyEditorTo(JavaEEConfigurationImpl configuration) throws ConfigurationException {
-        myServerEditor.applyTo(configuration);
-        configuration.APPLICATION_SERVER_NAME = myBundleBox.getSelectedSdkName();
+        SettingsEditor<CommonModel> serverEditor = myServerEditor;
+        if (serverEditor != null) {
+            serverEditor.applyTo(configuration);
+        }
+
+        BundleBox bundleBox = myBundleBox;
+        if (bundleBox != null) {
+            configuration.APPLICATION_SERVER_NAME = bundleBox.getSelectedBundleName();
+        }
     }
 }

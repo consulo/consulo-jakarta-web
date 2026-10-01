@@ -2,14 +2,12 @@ package consulo.javaee.run.configuration.editor;
 
 import consulo.compiler.artifact.Artifact;
 import consulo.compiler.artifact.ArtifactManager;
-import consulo.compiler.artifact.ArtifactPointer;
 import consulo.compiler.artifact.execution.BuildArtifactsBeforeRunTaskHelper;
-import consulo.compiler.artifact.ui.awt.ChooseArtifactsDialog;
 import consulo.configurable.ConfigurationException;
 import consulo.dataContext.DataContext;
-import consulo.dataContext.DataManager;
 import consulo.disposer.Disposer;
 import consulo.execution.configuration.ui.SettingsEditor;
+import consulo.jakarta.localize.JakartaLocalize;
 import consulo.jakartaee.webServer.impl.deployment.DeploymentModel;
 import consulo.jakartaee.webServer.impl.run.configuration.CommonModel;
 import consulo.javaee.artifact.ExplodedWarArtifactType;
@@ -19,38 +17,51 @@ import consulo.javaee.run.configuration.JavaEEConfigurationImpl;
 import consulo.localize.LocalizeValue;
 import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.project.Project;
-import consulo.remoteServer.configuration.deployment.ArtifactDeploymentSource;
-import consulo.remoteServer.configuration.deployment.DeploymentSource;
 import consulo.remoteServer.configuration.deployment.DeploymentSourceFactory;
+import consulo.ui.Component;
+import consulo.ui.ListBox;
 import consulo.ui.annotation.RequiredUIAccess;
-import consulo.ui.ex.SimpleTextAttributes;
 import consulo.ui.ex.action.ActionToolbarPosition;
-import consulo.ui.ex.awt.*;
-import consulo.ui.ex.popup.*;
+import consulo.ui.ex.action.AnActionEvent;
+import consulo.ui.ex.popup.BaseListPopupStep;
+import consulo.ui.ex.popup.JBPopupFactory;
+import consulo.ui.ex.popup.PopupStep;
+import consulo.ui.ex.toolbar.AddAction;
+import consulo.ui.ex.toolbar.EditAction;
+import consulo.ui.ex.toolbar.RemoveAction;
+import consulo.ui.ex.toolbar.ToolbarDecoratorBuilderFactory;
 import consulo.ui.image.Image;
+import consulo.ui.layout.DockLayout;
+import consulo.ui.layout.LabeledLayout;
+import consulo.ui.layout.SplitLayoutPosition;
+import consulo.ui.layout.TwoComponentSplitLayout;
+import consulo.ui.model.FlatDataModel;
+import consulo.ui.model.MutableFlatDataModel;
+import jakarta.annotation.Nullable;
 
-import jakarta.annotation.Nonnull;
-
-import javax.swing.*;
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author VISTALL
  * @since 2017-07-09
  */
 public class JavaEEDeploymentConfigurationEditor extends SettingsEditor<JavaEEConfigurationImpl> {
-    public static String ARTIFACT = "Artifact...";
-
     private final Project myProject;
     private final JavaEEServerBundleType myBundleType;
     private final CommonModel myCommonModel;
-
-    private JBList<DeployItem> myDeploySourceList = new JBList<>(new DefaultListModel<>());
-
     private final BuildArtifactsBeforeRunTaskHelper myBuildArtifactsBeforeRunTaskHelper;
+
+    private final MutableFlatDataModel<DeployItem> myItems = FlatDataModel.of(List.of());
+
+    @Nullable
+    private ListBox<DeployItem> myItemList;
+    @Nullable
+    private DockLayout myItemSettingsPanel;
+    @Nullable
+    private DeployItem myShownItem;
 
     public JavaEEDeploymentConfigurationEditor(Project project, JavaEEServerBundleType bundleType, CommonModel commonModel) {
         myProject = project;
@@ -59,229 +70,230 @@ public class JavaEEDeploymentConfigurationEditor extends SettingsEditor<JavaEECo
         myBuildArtifactsBeforeRunTaskHelper = project.getInstance(BuildArtifactsBeforeRunTaskHelper.class);
     }
 
-    @Nonnull
     @Override
-    protected JComponent createEditor() {
-        DefaultListModel<DeployItem> model = (DefaultListModel<DeployItem>)myDeploySourceList.getModel();
-
-        myDeploySourceList.setCellRenderer(new ColoredListCellRenderer<>() {
-            @Override
-            protected void customizeCellRenderer(
-                @Nonnull JList<? extends DeployItem> list,
-                DeployItem value,
-                int index,
-                boolean selected,
-                boolean hasFocus
-            ) {
-                DeploymentSource deploymentSource = value.getDeploymentSource();
-                if (deploymentSource instanceof ArtifactDeploymentSource artifactDeploymentSource) {
-                    ArtifactPointer artifactPointer = artifactDeploymentSource.getArtifactPointer();
-                    Artifact artifact = artifactPointer.get();
-                    if (artifact != null) {
-                        append(artifact.getName());
-                        setIcon(artifact.getArtifactType().getIcon());
-                    }
-                    else {
-                        append(artifactPointer.getName(), SimpleTextAttributes.ERROR_ATTRIBUTES);
-                        setIcon(PlatformIconGroup.toolbarUnknown());
-                    }
-                }
-                else {
-                    throw new UnsupportedOperationException(deploymentSource.getClass().getName());
-                }
+    @RequiredUIAccess
+    protected Component createUIComponent() {
+        ListBox<DeployItem> itemList = ListBox.create(myItems);
+        itemList.setRender((presentation, item) -> {
+            DeployItem deployItem = item.getValue();
+            if (deployItem != null) {
+                deployItem.render(presentation);
             }
         });
+        itemList.addValueListener(event -> showItemSettings(event.getValue()));
+        myItemList = itemList;
 
-        JPanel rootPanel = new JPanel(new BorderLayout());
-        rootPanel.setBorder(IdeBorderFactory.createTitledBorder("Deploy at server startup", false));
+        Component itemListPanel = ToolbarDecoratorBuilderFactory.getInstance()
+            .create(itemList)
+            .addOrReplaceAction(new DeployItemAddAction())
+            .addOrReplaceAction(new DeployItemRemoveAction())
+            .disableAction(EditAction.class)
+            .withToolbarPosition(ActionToolbarPosition.RIGHT)
+            .build();
 
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        DockLayout itemSettingsPanel = DockLayout.create();
+        myItemSettingsPanel = itemSettingsPanel;
 
-        ToolbarDecorator decorator = ToolbarDecorator.createDecorator(myDeploySourceList);
-        decorator.setAddAction((b, e) -> {
-            ListPopupStep<String> step = new BaseListPopupStep<String>("Select source", ARTIFACT) {
-                @Override
-                public PopupStep onChosen(String selectedValue, boolean finalChoice) {
-                    if (ARTIFACT.equals(selectedValue)) {
-                        return doFinalStep(() -> selectArtifact(model));
-                    }
-                    return super.onChosen(selectedValue, finalChoice);
-                }
+        TwoComponentSplitLayout splitLayout = TwoComponentSplitLayout.create(SplitLayoutPosition.HORIZONTAL)
+            .withFirstComponent(itemListPanel)
+            .withSecondComponent(itemSettingsPanel)
+            .withProportion(40);
 
-                @Override
-                public PopupStep doFinalStep(Runnable runnable) {
-                    return super.doFinalStep(runnable);
-                }
-
-                @Override
-                public Image getIconFor(String value) {
-                    if (ARTIFACT.equals(value)) {
-                        return PlatformIconGroup.nodesArtifact();
-                    }
-                    return super.getIconFor(value);
-                }
-            };
-
-            ListPopup popup = JBPopupFactory.getInstance().createListPopup(myProject, step);
-            popup.showUnderneathOf(e.getRequiredData(UIExAWTDataKey.CONTEXT_COMPONENT));
-        });
-
-        decorator.setRemoveAction(anActionButton ->
-        {
-            DeployItem selectedValue = myDeploySourceList.getSelectedValue();
-            if (selectedValue != null) {
-                ArtifactPointer artifactPointer = selectedValue.getArtifactPointer();
-                if (artifactPointer != null) {
-                    Artifact artifact = artifactPointer.get();
-
-                    if (artifact != null) {
-                        DataContext context = DataManager.getInstance().getDataContext(myDeploySourceList);
-
-                        myBuildArtifactsBeforeRunTaskHelper.setBuildArtifactBeforeRunOption(context, artifact, false);
-                    }
-                }
-
-                Disposer.dispose(selectedValue);
-
-                model.removeElement(selectedValue);
-            }
-        });
-        decorator.setToolbarPosition(ActionToolbarPosition.RIGHT);
-        JPanel panel = decorator.createPanel();
-        panel.setPreferredSize(JBUI.size(200, -1));
-        mainPanel.add(panel, BorderLayout.WEST);
-
-        Wrapper settingsPanel = new Wrapper();
-        settingsPanel.setBorder(JBUI.Borders.empty(5));
-
-        myDeploySourceList.addListSelectionListener(e ->
-        {
-            if (e.getValueIsAdjusting()) {
-                return;
-            }
-
-            DeployItem selectedValue = myDeploySourceList.getSelectedValue();
-
-            settingsPanel.removeAll();
-
-            if (selectedValue == null) {
-                return;
-            }
-
-            SettingsEditor<DeploymentModel> editor = selectedValue.getEditor();
-
-            JComponent component = editor.getComponent();
-
-            settingsPanel.setContent(component);
-
-            editor.resetFrom(selectedValue.getDeploymentModel());
-        });
-
-        mainPanel.add(settingsPanel, BorderLayout.CENTER);
-
-        rootPanel.add(mainPanel, BorderLayout.CENTER);
-
-        return rootPanel;
+        return LabeledLayout.create(
+            JakartaLocalize.borderRunConfigurationEditorDeployAtServerStartup(),
+            DockLayout.create().center(splitLayout)
+        );
     }
 
     @RequiredUIAccess
-    private void selectArtifact(DefaultListModel<DeployItem> model) {
-        Artifact[] artifacts = ArtifactManager.getInstance(myProject).getArtifacts();
-
-        List<Artifact> listArtifacts = new ArrayList<>(artifacts.length);
-        loop:
-        for (Artifact artifact : artifacts) {
-            if (artifact.getArtifactType() != ExplodedWarArtifactType.getInstance()) {
-                continue;
-            }
-
-            Enumeration<DeployItem> elements = model.elements();
-            while (elements.hasMoreElements()) {
-                DeployItem item = elements.nextElement();
-
-                Artifact tempArtifact = item.getArtifactPointer().get();
-                if (artifact.equals(tempArtifact)) {
-                    continue loop;
-                }
-            }
-
-            listArtifacts.add(artifact);
+    private void showItemSettings(@Nullable DeployItem item) {
+        DeployItem shownItem = myShownItem;
+        if (shownItem == item) {
+            return;
         }
-        ChooseArtifactsDialog dialog =
-            new ChooseArtifactsDialog(myProject, listArtifacts, LocalizeValue.localizeTODO("Choose Artifact"), LocalizeValue.empty());
-        dialog.show();
 
-        if (dialog.isOK()) {
-            DeploymentSourceFactory factory = myProject.getInstance(DeploymentSourceFactory.class);
-
-            DataContext context = DataManager.getInstance().getDataContext(myDeploySourceList);
-            for (Artifact artifact : dialog.getChosenElements()) {
-                ArtifactDeploymentSource deploymentSource = factory.createArtifactDeploymentSource(artifact);
-
-                DeployItem element = new DeployItem(myCommonModel, deploymentSource, myBundleType);
-                model.addElement(element);
-                myDeploySourceList.setSelectedValue(element, true);
-
-                myBuildArtifactsBeforeRunTaskHelper.setBuildArtifactBeforeRunOption(context, artifact, true);
+        if (shownItem != null) {
+            try {
+                shownItem.saveEditorState();
+            }
+            catch (ConfigurationException ignored) {
             }
         }
+
+        clearItemSettings();
+
+        DockLayout itemSettingsPanel = myItemSettingsPanel;
+        if (item == null || itemSettingsPanel == null) {
+            return;
+        }
+
+        Component settingsComponent = item.getSettingsComponent();
+        if (settingsComponent != null) {
+            itemSettingsPanel.center(settingsComponent);
+        }
+        myShownItem = item;
+    }
+
+    @RequiredUIAccess
+    private void clearItemSettings() {
+        myShownItem = null;
+
+        DockLayout itemSettingsPanel = myItemSettingsPanel;
+        if (itemSettingsPanel != null) {
+            itemSettingsPanel.removeAll();
+        }
+    }
+
+    private List<Artifact> collectDeployableArtifacts() {
+        Set<Artifact> deployed = new HashSet<>();
+        for (DeployItem item : myItems) {
+            Artifact artifact = item.getArtifact();
+            if (artifact != null) {
+                deployed.add(artifact);
+            }
+        }
+
+        List<Artifact> artifacts = new ArrayList<>();
+        for (Artifact artifact : ArtifactManager.getInstance(myProject).getArtifacts()) {
+            if (artifact.getArtifactType() == ExplodedWarArtifactType.getInstance() && !deployed.contains(artifact)) {
+                artifacts.add(artifact);
+            }
+        }
+        return artifacts;
+    }
+
+    @RequiredUIAccess
+    private void chooseArtifact(AnActionEvent e, List<Artifact> artifacts) {
+        DataContext dataContext = e.getDataContext();
+
+        BaseListPopupStep<Artifact> step = new BaseListPopupStep<>(JakartaLocalize.titleRunConfigurationEditorChooseArtifact().get(), artifacts) {
+            @Override
+            public String getTextFor(Artifact value) {
+                return value.getName();
+            }
+
+            @Override
+            public Image getIconFor(Artifact value) {
+                return value.getArtifactType().getIcon();
+            }
+
+            @Override
+            public PopupStep onChosen(Artifact selectedValue, boolean finalChoice) {
+                return doFinalStep(() -> addArtifact(selectedValue, dataContext));
+            }
+        };
+
+        JBPopupFactory.getInstance().createListPopup(myProject, step).showUnderneathOf(e);
+    }
+
+    @RequiredUIAccess
+    private void addArtifact(Artifact artifact, DataContext dataContext) {
+        DeploymentSourceFactory factory = myProject.getInstance(DeploymentSourceFactory.class);
+
+        DeployItem item = new DeployItem(myCommonModel, factory.createArtifactDeploymentSource(artifact), myBundleType);
+        myItems.add(item);
+
+        ListBox<DeployItem> itemList = myItemList;
+        if (itemList != null) {
+            itemList.setValue(item);
+        }
+
+        myBuildArtifactsBeforeRunTaskHelper.setBuildArtifactBeforeRunOption(dataContext, artifact, true);
     }
 
     @Override
     protected void disposeEditor() {
         super.disposeEditor();
 
-        DefaultListModel<DeployItem> model = (DefaultListModel<DeployItem>)myDeploySourceList.getModel();
-        Enumeration<DeployItem> elements = model.elements();
-        while (elements.hasMoreElements()) {
-            Disposer.dispose(elements.nextElement());
+        for (DeployItem item : myItems) {
+            Disposer.dispose(item);
         }
     }
 
     @Override
+    @RequiredUIAccess
     protected void resetEditorFrom(JavaEEConfigurationImpl configuration) {
-        DefaultListModel<DeployItem> model = (DefaultListModel<DeployItem>)myDeploySourceList.getModel();
-        Enumeration<DeployItem> enumeration = model.elements();
-        while (enumeration.hasMoreElements()) {
-            DeployItem item = enumeration.nextElement();
-            model.removeElement(item);
-            Disposer.dispose(item);
+        clearItemSettings();
+
+        List<DeployItem> items = new ArrayList<>();
+        for (DeploymentModel deploymentModel : configuration.getDeploymentSettings().getDeploymentModels()) {
+            DeployItem item = new DeployItem(myCommonModel, deploymentModel.getDeploymentSource(), myBundleType);
+            item.resetFrom(deploymentModel);
+            items.add(item);
         }
 
-        List<DeploymentModel> deploymentModels = configuration.getDeploymentSettings().getDeploymentModels();
-        for (DeploymentModel deploymentModel : deploymentModels) {
-            DeploymentSource deploymentSource = deploymentModel.getDeploymentSource();
-
-            DeployItem item = new DeployItem(myCommonModel, deploymentSource, myBundleType);
-            item.getEditor().resetFrom(deploymentModel);
-            try {
-                item.getEditor().applyTo(item.getDeploymentModel());
-            }
-            catch (ConfigurationException ignored) {
-            }
-
-            model.addElement(item);
+        for (DeployItem oldItem : myItems.replaceAll(items)) {
+            Disposer.dispose(oldItem);
         }
     }
 
     @Override
     protected void applyEditorTo(JavaEEConfigurationImpl configuration) throws ConfigurationException {
         JavaEEDeploymentSettingsImpl deploymentSettings = (JavaEEDeploymentSettingsImpl)configuration.getDeploymentSettings();
-        DefaultListModel<DeployItem> model = (DefaultListModel<DeployItem>)myDeploySourceList.getModel();
 
         deploymentSettings.removeAll();
 
-        Enumeration<DeployItem> enumeration = model.elements();
-        while (enumeration.hasMoreElements()) {
-            DeployItem deployItem = enumeration.nextElement();
+        for (DeployItem item : myItems) {
+            DeploymentModel deploymentModel = myBundleType.createNewDeploymentModel(myCommonModel, item.getDeploymentSource());
+            if (deploymentModel == null) {
+                continue;
+            }
 
-            DeploymentSource deploymentSource = deployItem.getDeploymentSource();
-
-            DeploymentModel deploymentModel = myBundleType.createNewDeploymentModel(myCommonModel, deploymentSource);
-
-            deployItem.getEditor().applyTo(deploymentModel);
+            item.applyTo(deploymentModel);
 
             deploymentSettings.addModel(deploymentModel);
+        }
+    }
+
+    private class DeployItemAddAction extends AddAction<DeployItem> {
+        @Override
+        @RequiredUIAccess
+        protected void doAdd(AnActionEvent e) {
+            List<Artifact> artifacts = collectDeployableArtifacts();
+
+            LocalizeValue artifactSource = JakartaLocalize.labelRunConfigurationEditorDeploymentSourceArtifact();
+            BaseListPopupStep<LocalizeValue> step =
+                new BaseListPopupStep<>(JakartaLocalize.titleRunConfigurationEditorSelectDeploymentSource().get(), artifactSource) {
+                    @Override
+                    public String getTextFor(LocalizeValue value) {
+                        return value.get();
+                    }
+
+                    @Override
+                    public Image getIconFor(LocalizeValue value) {
+                        return PlatformIconGroup.nodesArtifact();
+                    }
+
+                    @Override
+                    public boolean isSelectable(LocalizeValue value) {
+                        return !artifacts.isEmpty();
+                    }
+
+                    @Override
+                    public PopupStep onChosen(LocalizeValue selectedValue, boolean finalChoice) {
+                        return doFinalStep(() -> chooseArtifact(e, artifacts));
+                    }
+                };
+
+            JBPopupFactory.getInstance().createListPopup(myProject, step).showUnderneathOf(e);
+        }
+    }
+
+    private class DeployItemRemoveAction extends RemoveAction<DeployItem> {
+        @Override
+        @RequiredUIAccess
+        protected void doRemove(DeployItem item, AnActionEvent e) {
+            Artifact artifact = item.getArtifact();
+            if (artifact != null) {
+                myBuildArtifactsBeforeRunTaskHelper.setBuildArtifactBeforeRunOption(e.getDataContext(), artifact, false);
+            }
+
+            if (myShownItem == item) {
+                clearItemSettings();
+            }
+
+            myItems.remove(item);
+            Disposer.dispose(item);
         }
     }
 }

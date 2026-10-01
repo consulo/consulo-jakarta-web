@@ -6,16 +6,17 @@ package consulo.jakartaee.webServer.impl.oss.server;
 
 import consulo.configurable.ConfigurationException;
 import consulo.execution.configuration.ui.SettingsEditor;
-import consulo.jakartaee.webServer.impl.oss.JavaeeBundle;
+import consulo.jakarta.localize.JakartaLocalize;
 import consulo.jakartaee.webServer.impl.run.configuration.CommonModel;
 import consulo.jakartaee.webServer.impl.run.configuration.PredefinedLogFilesListener;
 import consulo.jakartaee.webServer.impl.run.configuration.PredefinedLogFilesProviderEditor;
 import consulo.javaee.bundle.JavaEEServerBundleType;
+import consulo.localize.LocalizeValue;
 import consulo.proxy.EventDispatcher;
-import consulo.ui.ex.awt.IdeBorderFactory;
-import jakarta.annotation.Nonnull;
-
-import javax.swing.*;
+import consulo.ui.Component;
+import consulo.ui.TextBox;
+import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.layout.LabeledLayout;
 
 public abstract class JavaeeRunSettingsEditor<T extends JavaeeServerModel> extends SettingsEditor<CommonModel> implements PredefinedLogFilesProviderEditor {
     private final EventDispatcher<PredefinedLogFilesListener> dispatcher = EventDispatcher.create(PredefinedLogFilesListener.class);
@@ -49,11 +50,9 @@ public abstract class JavaeeRunSettingsEditor<T extends JavaeeServerModel> exten
     }
 
     @Override
-    @Nonnull
-    protected JComponent createEditor() {
-        JComponent editor = getEditor();
-        editor.setBorder(IdeBorderFactory.createTitledBorder(JavaeeBundle.message("RunEditor.title", myBundleType.getDisplayName())));
-        return editor;
+    @RequiredUIAccess
+    protected Component createUIComponent() {
+        return LabeledLayout.create(JakartaLocalize.titleRunConfigurationEditorServerSettings(myBundleType.getDisplayName()), getEditor());
     }
 
     @Override
@@ -68,17 +67,17 @@ public abstract class JavaeeRunSettingsEditor<T extends JavaeeServerModel> exten
         }
     }
 
-    protected static int getPort(JTextField text, String message) throws ConfigurationException {
+    protected static int getPort(TextBox text, LocalizeValue message) throws ConfigurationException {
         try {
-            return Integer.parseInt(text.getText());
+            return Integer.parseInt(text.getValue());
         }
         catch (NumberFormatException e) {
             throw new ConfigurationException(message);
         }
     }
 
-    @Nonnull
-    protected abstract JComponent getEditor();
+    @RequiredUIAccess
+    protected abstract Component getEditor();
 
     protected abstract void resetEditorFrom(T model);
 

@@ -146,6 +146,7 @@ public class JavaEEConfigurationImpl extends LocatableConfigurationBase implemen
             throw new UnsupportedOperationException();
         }
         clone.myBundleType = myBundleType;
+        clone.myDeploymentSettings = myDeploymentSettings.copy(clone);
         return clone;
     }
 

@@ -36,6 +36,14 @@ public class JavaEEDeploymentSettingsImpl implements DeploymentSettings {
         myDeploymentSourceFactory = project.getInstance(DeploymentSourceFactory.class);
     }
 
+    public JavaEEDeploymentSettingsImpl copy(CommonModel commonModel) {
+        JavaEEDeploymentSettingsImpl copy = new JavaEEDeploymentSettingsImpl(myProject, myBundleType, commonModel);
+        Element element = new Element("copy");
+        writeExternal(element);
+        copy.readExternal(element);
+        return copy;
+    }
+
     public void addModel(@Nonnull DeploymentModel model) {
         myItems.add(model);
     }
