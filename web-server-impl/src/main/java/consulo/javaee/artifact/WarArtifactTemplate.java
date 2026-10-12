@@ -16,36 +16,43 @@
 
 package consulo.javaee.artifact;
 
-import consulo.compiler.artifact.*;
-import consulo.compiler.artifact.element.*;
-import consulo.compiler.artifact.ui.awt.ChooseArtifactsDialog;
+import consulo.compiler.artifact.Artifact;
+import consulo.compiler.artifact.ArtifactManager;
+import consulo.compiler.artifact.ArtifactPointerManager;
+import consulo.compiler.artifact.ArtifactTemplate;
+import consulo.compiler.artifact.ArtifactUtil;
+import consulo.compiler.artifact.element.ArtifactElementType;
+import consulo.compiler.artifact.element.ArtifactPackagingElement;
+import consulo.compiler.artifact.element.CompositePackagingElement;
+import consulo.compiler.artifact.element.PackagingElementFactory;
+import consulo.compiler.artifact.element.PackagingElementResolvingContext;
 import consulo.jakartaee.web.module.extension.JavaWebModuleExtension;
+import consulo.jakartaee.webServer.impl.localize.JakartaWebServerLocalize;
 import consulo.localize.LocalizeValue;
 import consulo.module.Module;
 import consulo.module.content.layer.ModuleRootModel;
-
 import consulo.ui.annotation.RequiredUIAccess;
-import jakarta.annotation.Nullable;
+import consulo.ui.ex.dialog.ChooseItemsDialogDescriptor;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author VISTALL
  * @since 07.11.13.
  */
 public class WarArtifactTemplate extends ArtifactTemplate {
-    private PackagingElementResolvingContext myContext;
+    private final PackagingElementResolvingContext myContext;
 
     public WarArtifactTemplate(PackagingElementResolvingContext context) {
         myContext = context;
     }
 
     public static NewArtifactConfiguration doCreateArtifactTemplate(Artifact artifact, PackagingElementResolvingContext context) {
-        Set<Module> modulesIncludedInArtifacts =
-            ArtifactUtil.getModulesIncludedInArtifacts(Collections.singletonList(artifact), context.getProject());
+        Set<Module> modulesIncludedInArtifacts = ArtifactUtil.getModulesIncludedInArtifacts(List.of(artifact), context.getProject());
 
         String moduleName = artifact.getName();
 
@@ -75,10 +82,9 @@ public class WarArtifactTemplate extends ArtifactTemplate {
         );
     }
 
-    @Nullable
     @Override
     @RequiredUIAccess
-    public NewArtifactConfiguration createArtifact() {
+    public CompletableFuture<NewArtifactConfiguration> createArtifact() {
         List<Artifact> artifacts = new ArrayList<>();
         for (Artifact artifact : ArtifactManager.getInstance(myContext.getProject()).getArtifacts()) {
             if (artifact.getArtifactType() == ExplodedWarArtifactType.getInstance()) {
@@ -86,22 +92,27 @@ public class WarArtifactTemplate extends ArtifactTemplate {
             }
         }
 
-        ChooseArtifactsDialog dialog = new ChooseArtifactsDialog(
-            myContext.getProject(),
+        return ChooseItemsDialogDescriptor.showAsync(
+            null,
+            JakartaWebServerLocalize.artifactTemplateFromExplodedChooseTitle(),
+            JakartaWebServerLocalize.artifactTemplateFromExplodedChooseDescription(),
             artifacts,
-            LocalizeValue.localizeTODO("Choose Artifact"),
-            LocalizeValue.localizeTODO("Choose Exploded War Artifact")
-        );
-
-        List<Artifact> artifactList = dialog.showAndGetResult();
-        if (artifactList.size() != 1) {
-            return null;
-        }
-        return doCreateArtifactTemplate(artifactList.get(0), myContext);
+            (artifact, presentation) -> {
+                presentation.withIcon(artifact.getArtifactType().getIcon());
+                presentation.append(artifact.getName());
+            },
+            false,
+            List.of()
+        ).thenApply(selected -> {
+            if (selected.size() != 1) {
+                throw new CancellationException();
+            }
+            return doCreateArtifactTemplate(selected.get(0), myContext);
+        });
     }
 
     @Override
     public LocalizeValue getPresentableName() {
-        return LocalizeValue.localizeTODO("From Exploded Artifact");
+        return JakartaWebServerLocalize.artifactTemplateFromExplodedName();
     }
 }

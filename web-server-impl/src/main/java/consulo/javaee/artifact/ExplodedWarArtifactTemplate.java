@@ -17,6 +17,7 @@
 package consulo.javaee.artifact;
 
 import consulo.annotation.access.RequiredReadAction;
+import consulo.application.ReadAction;
 import consulo.compiler.artifact.ArtifactTemplate;
 import consulo.compiler.artifact.element.*;
 import consulo.component.util.pointer.NamedPointer;
@@ -25,6 +26,7 @@ import consulo.content.library.Library;
 import consulo.content.library.LibraryTable;
 import consulo.jakartaee.web.JavaWebConstants;
 import consulo.jakartaee.web.module.extension.JavaWebModuleExtension;
+import consulo.jakartaee.webServer.impl.localize.JakartaWebServerLocalize;
 import consulo.language.content.LanguageContentFolderScopes;
 import consulo.language.content.ProductionContentFolderTypeProvider;
 import consulo.language.content.ProductionResourceContentFolderTypeProvider;
@@ -36,18 +38,20 @@ import consulo.module.content.layer.ModulesProvider;
 import consulo.module.content.layer.orderEntry.LibraryOrderEntry;
 import consulo.module.content.layer.orderEntry.ModuleOrderEntry;
 import consulo.module.content.layer.orderEntry.RootPolicy;
-import consulo.module.ui.awt.ChooseModulesDialog;
+import consulo.platform.base.icon.PlatformIconGroup;
 import consulo.project.Project;
 import consulo.ui.annotation.RequiredUIAccess;
+import consulo.ui.ex.dialog.ChooseItemsDialogDescriptor;
 import consulo.util.lang.Pair;
 
 import jakarta.annotation.Nonnull;
-import jakarta.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * @author VISTALL
@@ -178,10 +182,9 @@ public class ExplodedWarArtifactTemplate extends ArtifactTemplate {
         );
     }
 
-    @Nullable
     @Override
     @RequiredUIAccess
-    public NewArtifactConfiguration createArtifact() {
+    public CompletableFuture<NewArtifactConfiguration> createArtifact() {
         List<Module> modules = new ArrayList<>();
         for (Module module : myContext.getModulesProvider().getModules()) {
             if (ModuleUtilCore.getExtension(module, JavaWebModuleExtension.class) != null) {
@@ -189,22 +192,27 @@ public class ExplodedWarArtifactTemplate extends ArtifactTemplate {
             }
         }
 
-        ChooseModulesDialog dialog = new ChooseModulesDialog(
-            myContext.getProject(),
+        return ChooseItemsDialogDescriptor.showAsync(
+            null,
+            JakartaWebServerLocalize.artifactTemplateFromModuleChooseTitle(),
+            JakartaWebServerLocalize.artifactTemplateFromModuleChooseDescription(),
             modules,
-            LocalizeValue.localizeTODO("Choose Module"),
-            LocalizeValue.localizeTODO("Choose Module For Artifact Creation")
-        );
-        dialog.setSingleSelectionMode();
-        List<Module> selectedModules = dialog.showAndGetResult();
-        if (selectedModules.size() != 1) {
-            return null;
-        }
-        return doCreateArtifactTemplate(modules.get(0), myContext);
+            (module, presentation) -> {
+                presentation.withIcon(PlatformIconGroup.nodesModule());
+                presentation.append(module.getName());
+            },
+            false,
+            List.of()
+        ).thenApply(selected -> {
+            if (selected.size() != 1) {
+                throw new CancellationException();
+            }
+            return ReadAction.compute(() -> doCreateArtifactTemplate(selected.get(0), myContext));
+        });
     }
 
     @Override
     public LocalizeValue getPresentableName() {
-        return LocalizeValue.localizeTODO("From Module");
+        return JakartaWebServerLocalize.artifactTemplateFromModuleName();
     }
 }

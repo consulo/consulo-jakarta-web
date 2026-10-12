@@ -74,3 +74,15 @@ GenericAction.source:
   text: Edit Source
 Error.fileNotFound:
   text: File ''{0}'' not found
+artifact.template.from.exploded.choose.description:
+  text: Choose Exploded War Artifact
+artifact.template.from.exploded.choose.title:
+  text: Choose Artifact
+artifact.template.from.exploded.name:
+  text: From Exploded Artifact
+artifact.template.from.module.choose.description:
+  text: Choose Module For Artifact Creation
+artifact.template.from.module.choose.title:
+  text: Choose Module
+artifact.template.from.module.name:
+  text: From Module
