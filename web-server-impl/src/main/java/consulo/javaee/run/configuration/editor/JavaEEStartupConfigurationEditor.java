@@ -26,7 +26,7 @@ public class JavaEEStartupConfigurationEditor extends SettingsEditor<JavaEEConfi
     @RequiredUIAccess
     protected Component createUIComponent() {
         ListBox<Executor> executorList = ListBox.create(Application.get().getExtensionList(Executor.class));
-        executorList.setRender((presentation, item) -> {
+        executorList.setRenderer((presentation, item) -> {
             Executor executor = item.getValue();
             if (executor != null) {
                 presentation.withIcon(executor.getIcon());
