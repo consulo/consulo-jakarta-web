@@ -37,7 +37,7 @@ import consulo.ui.layout.SplitLayoutPosition;
 import consulo.ui.layout.TwoComponentSplitLayout;
 import consulo.ui.model.FlatDataModel;
 import consulo.ui.model.MutableFlatDataModel;
-import jakarta.annotation.Nullable;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -56,12 +56,9 @@ public class JavaEEDeploymentConfigurationEditor extends SettingsEditor<JavaEECo
 
     private final MutableFlatDataModel<DeployItem> myItems = FlatDataModel.of(List.of());
 
-    @Nullable
-    private ListBox<DeployItem> myItemList;
-    @Nullable
-    private DockLayout myItemSettingsPanel;
-    @Nullable
-    private DeployItem myShownItem;
+    private @Nullable ListBox<DeployItem> myItemList;
+    private @Nullable DockLayout myItemSettingsPanel;
+    private @Nullable DeployItem myShownItem;
 
     public JavaEEDeploymentConfigurationEditor(Project project, JavaEEServerBundleType bundleType, CommonModel commonModel) {
         myProject = project;
@@ -74,7 +71,7 @@ public class JavaEEDeploymentConfigurationEditor extends SettingsEditor<JavaEECo
     @RequiredUIAccess
     protected Component createUIComponent() {
         ListBox<DeployItem> itemList = ListBox.create(myItems);
-        itemList.setRender((presentation, item) -> {
+        itemList.setRenderer((presentation, item) -> {
             DeployItem deployItem = item.getValue();
             if (deployItem != null) {
                 deployItem.render(presentation);
