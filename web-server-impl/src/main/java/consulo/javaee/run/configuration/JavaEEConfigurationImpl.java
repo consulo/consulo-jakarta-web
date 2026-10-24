@@ -1,6 +1,5 @@
 package consulo.javaee.run.configuration;
 
-import com.intellij.java.execution.impl.JavaRunConfigurationExtensionManager;
 import consulo.annotation.access.RequiredReadAction;
 import consulo.compiler.artifact.Artifact;
 import consulo.compiler.scope.CompileScope;
@@ -10,14 +9,9 @@ import consulo.execution.RuntimeConfigurationException;
 import consulo.execution.configuration.*;
 import consulo.execution.configuration.log.LogFileOptions;
 import consulo.execution.configuration.log.PredefinedLogFile;
-import consulo.execution.configuration.log.ui.LogConfigurationPanel;
-import consulo.execution.configuration.ui.SettingsEditor;
-import consulo.execution.configuration.ui.SettingsEditorGroup;
+import consulo.execution.configuration.fragment.RunConfigurationFragment;
 import consulo.execution.executor.Executor;
-import consulo.execution.localize.ExecutionLocalize;
 import consulo.execution.runner.ExecutionEnvironment;
-import consulo.execution.runner.ProgramRunner;
-import consulo.jakarta.localize.JakartaLocalize;
 import consulo.jakartaee.webServer.impl.appServerIntegrations.AppServerIntegration;
 import consulo.jakartaee.webServer.impl.deployment.DeploymentModel;
 import consulo.jakartaee.webServer.impl.deployment.DeploymentSettings;
@@ -28,9 +22,6 @@ import consulo.jakartaee.webServer.impl.run.localRun.ExecutableObjectStartupPoli
 import consulo.java.debugger.impl.GenericDebugRunnerConfiguration;
 import consulo.javaee.bundle.JavaEEServerBundleType;
 import consulo.javaee.deployment.impl.JavaEEDeploymentSettingsImpl;
-import consulo.javaee.run.configuration.editor.JavaEEDeploymentConfigurationEditor;
-import consulo.javaee.run.configuration.editor.JavaEEServerConfigurationEditor;
-import consulo.javaee.run.configuration.editor.JavaEEStartupConfigurationEditor;
 import consulo.javaee.run.configuration.state.JavaEECommandLineState;
 import consulo.module.Module;
 import consulo.process.ExecutionException;
@@ -237,30 +228,9 @@ public class JavaEEConfigurationImpl extends LocatableConfigurationBase implemen
         element.addContent(serverSettingsElement);
     }
 
-    @Nonnull
     @Override
-    @SuppressWarnings("unchecked")
-    public SettingsEditor<? extends RunConfiguration> getConfigurationEditor() {
-        SettingsEditorGroup group = new SettingsEditorGroup<>();
-        group.addEditor(JakartaLocalize.titleRunConfigurationEditorServer().get(), new JavaEEServerConfigurationEditor(myBundleType));
-        group.addEditor(
-            JakartaLocalize.titleRunConfigurationEditorDeployment().get(),
-            new JavaEEDeploymentConfigurationEditor(getProject(), myBundleType, this)
-        );
-        group.addEditor(ExecutionLocalize.logsTabTitle().get(), new LogConfigurationPanel<>());
-        JavaRunConfigurationExtensionManager.getInstance().appendEditors(this, group);
-        group.addEditor(ExecutionLocalize.runConfigurationStartupConnectionRabTitle().get(), new JavaEEStartupConfigurationEditor());
-        return group;
-    }
-
-    @Override
-    public ConfigurationPerRunnerSettings createRunnerSettings(ConfigurationInfoProvider provider) {
-        return super.createRunnerSettings(provider);
-    }
-
-    @Override
-    public SettingsEditor<ConfigurationPerRunnerSettings> getRunnerSettingsEditor(ProgramRunner runner) {
-        return super.getRunnerSettingsEditor(runner);
+    public List<RunConfigurationFragment<?>> createFragments() {
+        return List.of(new JavaEEServerFragment(myBundleType), new JavaEEDeploymentFragment(myBundleType, this));
     }
 
     @Nonnull
